@@ -1,0 +1,9 @@
+python-docx
+pymupdf
+pdf2image
+pytesseract
+phonenumbers
+Pillow
+requests
+python-dotenv
+pyperclip
