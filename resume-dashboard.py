@@ -10,7 +10,7 @@ st.set_page_config(page_title="Candidate Search Dashboard", layout="wide")
 # === Load CSV Data ===
 @st.cache_data
 def load_data():
-    return pd.read_csv("versionv3.csv")
+    return pd.read_csv("version3.csv")
 
 df = load_data()
 
