@@ -17,13 +17,26 @@ df = load_data()
 # === Sidebar Filters ===
 st.sidebar.header("🔍 Search Filters")
 
+areas = []
+
+for i in df['Area']:
+    if pd.notna(i):  # check if value is not NaN
+        area = [x.strip() for x in i.split(",")]  # split and strip spaces
+        for i in area:
+            if i not in areas:
+                areas.append(i)
+    else:
+        print([])  # empty list if NaN
+
+area_options = ['All'] + areas
+
 # Required Role field
 role = st.sidebar.text_input("Role (required)", placeholder="e.g., Data Entry")
 
 # Optional filters
 name = st.sidebar.text_input("Name (optional)", placeholder="e.g., Tushar")
 location = st.sidebar.text_input("Location (optional)", placeholder="e.g., Surat")
-area = st.sidebar.text_input("Area (optional)", placeholder="e.g., Katargam")
+area = st.sidebar.selectbox("Area (optional)", area_options)
 contact = st.sidebar.text_input("Number (optional)", placeholder="e.g., 1112223334")
 gender_options = {
     "All": None,  # No filter for 'All'
@@ -31,11 +44,12 @@ gender_options = {
     "Female": 1
 }
 
-religion = st.sidebar.selectbox(
-    "Gender",
-    ["Hindu","Muslim"]
-)
+religion_options = ["All", "Hindu", "Muslim"]
 
+religion = st.sidebar.selectbox(
+    "Religion",
+    religion_options
+)
 # The new dropdown select box
 gender_selection = st.sidebar.selectbox(
     "Gender",
@@ -62,11 +76,12 @@ if contact:
     
     filtered_df = filtered_df[filtered_df["Contact"].str.fullmatch(contact, case=False, na=False)]
     
-if area:
+if area != "All":
     filtered_df = filtered_df[filtered_df["Area"].str.contains(area, case=False, na=False)]
 
-if religion:
+if religion != "All":
     filtered_df = filtered_df[filtered_df["Religion"].str.contains(religion, case=False, na=False)]
+
 
 selected_gender_value = gender_options[gender_selection]
 if selected_gender_value is not None:
