@@ -23,12 +23,18 @@ role = st.sidebar.text_input("Role (required)", placeholder="e.g., Data Entry")
 # Optional filters
 name = st.sidebar.text_input("Name (optional)", placeholder="e.g., Tushar")
 location = st.sidebar.text_input("Location (optional)", placeholder="e.g., Surat")
+area = st.sidebar.text_input("Area (optional)", placeholder="e.g., Katargam")
 contact = st.sidebar.text_input("Number (optional)", placeholder="e.g., 1112223334")
 gender_options = {
     "All": None,  # No filter for 'All'
     "Male": 5,
     "Female": 1
 }
+
+religion = st.sidebar.selectbox(
+    "Gender",
+    ["Hindu","Muslim"]
+)
 
 # The new dropdown select box
 gender_selection = st.sidebar.selectbox(
@@ -56,6 +62,12 @@ if contact:
     
     filtered_df = filtered_df[filtered_df["Contact"].str.fullmatch(contact, case=False, na=False)]
     
+if area:
+    filtered_df = filtered_df[filtered_df["Area"].str.contains(area, case=False, na=False)]
+
+if religion:
+    filtered_df = filtered_df[filtered_df["Religion"].str.contains(religion, case=False, na=False)]
+
 selected_gender_value = gender_options[gender_selection]
 if selected_gender_value is not None:
     filtered_df = filtered_df[filtered_df['Gender'] == selected_gender_value]
@@ -77,26 +89,32 @@ end = start + results_per_page
 # === Display Each Candidate ===
 for idx, row in filtered_df.iloc[start:end].iterrows():
     with st.container():
-        col1, col2 = st.columns([4, 1])
+        col1, col2 , col3 = st.columns([2,2,1])
         with col1:
             gender_value = row.get('Gender', 'N/A')
             gender_display = "Male" if gender_value == 5 else "Female" if gender_value != 'N/A' else 'N/A'
             st.markdown(f"""
-                **Name:** {row.get('Name', 'N/A')}                  
+                ### {row.get('Name', 'N/A')}                  
                 **Role:** {row.get('Job Type', 'N/A')}  
                 **Location:** {row.get('City', 'N/A')}  
-                **Mobile.No:** {row.get('Contact', 'N/A')}  
-                **Experience:** {row.get('Experience', 'N/A')}  
-                **Gender:** {gender_display}
             """)
-            Copy,sample = st.columns([1,3])
+            Copy,sample = st.columns([1,1])
             with Copy:
                 st.code(row.get('Name', 'N/A'))
                 st.code(row.get('Contact', 'N/A'))
             with sample:
                 pass
-
+        
         with col2:
+            st.markdown(f"""
+                **Area:** {row.get('Area', 'N/A')}  
+                **Mobile.No:** {row.get('Contact', 'N/A')}  
+                **Experience:** {row.get('Experience', 'N/A')}  
+                **Gender:** {gender_display}    
+                **Religion:** {row.get('Religion', 'N/A')}  
+            """)
+
+        with col3:
             resume_link = row.get("Resume") or row.get("resume_url") or ""
             if pd.notna(resume_link) and resume_link.strip() != "":
                 resume_button_key = f"resume_btn_{idx}"
