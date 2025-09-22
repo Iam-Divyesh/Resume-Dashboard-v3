@@ -17,18 +17,28 @@ df = load_data()
 # === Sidebar Filters ===
 st.sidebar.header("🔍 Search Filters")
 
+# Extract unique areas from the dataset
 areas = []
-
 for i in df['Area']:
     if pd.notna(i):  # check if value is not NaN
-        area = [x.strip() for x in i.split(",")]  # split and strip spaces
-        for i in area:
-            if i not in areas:
-                areas.append(i)
-    else:
-        print([])  # empty list if NaN
+        area_list = [x.strip() for x in str(i).split(",")]  # split and strip spaces
+        for area_item in area_list:
+            if area_item not in areas and area_item:  # avoid empty strings
+                areas.append(area_item)
+            
+experience = []
+for i in df['Experience']:
+    if pd.notna(i):  
+        if i not in experience:
+            experience.append(i)
+    
+print(experience)
+            
 
-area_options = ['All'] + areas
+# Sort areas for better UX
+areas = sorted(areas)
+
+
 
 # Required Role field
 role = st.sidebar.text_input("Role (required)", placeholder="e.g., Data Entry")
@@ -36,7 +46,11 @@ role = st.sidebar.text_input("Role (required)", placeholder="e.g., Data Entry")
 # Optional filters
 name = st.sidebar.text_input("Name (optional)", placeholder="e.g., Tushar")
 location = st.sidebar.text_input("Location (optional)", placeholder="e.g., Surat")
-area = st.sidebar.selectbox("Area (optional)", area_options)
+# Fixed multiselect for areas - removed 'All' option
+selected_areas = st.sidebar.multiselect("Area (optional)", areas)
+
+selected_experience = st.sidebar.multiselect("Experience (optional)", experience)
+
 contact = st.sidebar.text_input("Number (optional)", placeholder="e.g., 1112223334")
 gender_options = {
     "All": None,  # No filter for 'All'
@@ -57,12 +71,14 @@ gender_selection = st.sidebar.selectbox(
 )
 
 
-# if not role.strip():
-#     st.sidebar.warning("⚠️ Please enter a role to search.")
-#     st.stop()
 
-# === Filter Logic ===
-filtered_df = df[df["Job Type"].str.contains(role, case=False, na=False)]
+
+# Start with role filter - handles empty role gracefully
+if role.strip():
+    filtered_df = df[df["Job Type"].str.contains(role, case=False, na=False)]
+else:
+    filtered_df = df.copy()  # Use all data if no role specified
+
 
 if name:
     filtered_df = filtered_df[filtered_df["Name"].str.contains(name, case=False, na=False)]
@@ -74,10 +90,23 @@ filtered_df["Contact"] = filtered_df["Contact"].astype(str)
 
 if contact:
     
-    filtered_df = filtered_df[filtered_df["Contact"].str.fullmatch(contact, case=False, na=False)]
+    filtered_df = filtered_df[filtered_df["Contact"].str.contains(contact, case=False, na=False)]
     
-if area != "All":
-    filtered_df = filtered_df[filtered_df["Area"].str.contains(area, case=False, na=False)]
+# Fixed area filtering for multiselect
+if selected_areas:  # Only filter if areas are selected
+    # Create a mask for rows that contain any of the selected areas
+    area_mask = filtered_df["Area"].apply(
+        lambda x: any(area in str(x) for area in selected_areas) if pd.notna(x) else False
+    )
+    filtered_df = filtered_df[area_mask]
+
+
+if selected_experience:
+    experience_mask = filtered_df["Experience"].apply(
+        lambda x: any(exp in str(x) for exp in selected_experience) if pd.notna(x) else False
+    )
+    filtered_df = filtered_df[experience_mask]
+
 
 if religion != "All":
     filtered_df = filtered_df[filtered_df["Religion"].str.contains(religion, case=False, na=False)]
