@@ -14,6 +14,12 @@ def load_data():
 
 df = load_data()
 
+if "marked_profiles" not in st.session_state:
+    st.session_state.marked_profiles = set()
+    
+def mark_profile(profile_id):
+    st.session_state.marked_profiles.add(profile_id)
+
 # === Sidebar Filters ===
 st.sidebar.header("🔍 Search Filters")
 
@@ -181,6 +187,14 @@ for idx, row in filtered_df.iloc[start:end].iterrows():
                     st.components.v1.html(f"<script>{js}</script>", height=0)
             else:
                 st.write("❌ No WhatsApp Number")
+            
+            profile_id = row.get("Contact","") + "_" + str(idx)  # unique ID
+
+            if profile_id in st.session_state.marked_profiles:
+                st.success("Marked")
+            else:
+                mark_btn_key = f"mark_btn_{idx}"
+                st.button("Mark Success", key=mark_btn_key, on_click=mark_profile, args=(profile_id,))
 
         st.markdown("---")
 
