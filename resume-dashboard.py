@@ -38,16 +38,31 @@ for i in df['Experience']:
         if i not in experience:
             experience.append(i)
     
-print(experience)
+
             
 
 # Sort areas for better UX
 areas = sorted(areas)
 
 
+roles = set()
+
+for val in df["Job Type"]:
+    if pd.notna(val):
+        for r in str(val).split(","):
+            r = r.strip()
+            if r:
+                roles.add(r)
+
+roles = sorted(list(roles))
+
+
 
 # Required Role field
-role = st.sidebar.text_input("Role (required)", placeholder="e.g., Data Entry")
+selected_roles = st.sidebar.multiselect(
+    "Role (required)",
+    roles
+)
 
 # Optional filters
 name = st.sidebar.text_input("Name (optional)", placeholder="e.g., Tushar")
@@ -78,12 +93,13 @@ gender_selection = st.sidebar.selectbox(
 
 
 
-
-# Start with role filter - handles empty role gracefully
-if role.strip():
-    filtered_df = df[df["Job Type"].str.contains(role, case=False, na=False)]
+if selected_roles:
+    role_mask = df["Job Type"].apply(
+        lambda x: any(role in str(x) for role in selected_roles) if pd.notna(x) else False
+    )
+    filtered_df = df[role_mask]
 else:
-    filtered_df = df.copy()  # Use all data if no role specified
+    filtered_df = df.copy()
 
 
 if name:
@@ -127,7 +143,10 @@ results_per_page = 10
 total_results = len(filtered_df)
 total_pages = math.ceil(total_results / results_per_page)
 
-st.markdown(f"### Showing {total_results} result(s) for role: **{role}**")
+st.markdown(
+    f"### Showing {len(filtered_df)} result(s) for role(s): **{', '.join(selected_roles)}**"
+)
+
 
 # Page selector
 page = st.number_input("Page", min_value=1, max_value=max(total_pages, 1), step=1)
